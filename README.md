@@ -108,4 +108,91 @@ This project is intended to build and deploy an SNPE model on Qualcomm Devices, 
  - After successfully compiling it will generate a shared object file that can be loaded while running UDO. 
 
 ### Completing the Implementation Skeleton Code
- - For each core type implementation library will be present on the path jni/src/CPU ,  jni/src/GPU , jni/src/DSP . In the file ImplLibCpu.cpp / ImplLibGpu / ImplLibDsp user should add code in   createOp and snpeUdoExecute according to their requirement
+ - For each core type implementation library will be present on the path jni/src/CPU ,  jni/src/GPU , jni/src/DSP. 
+ - In the file ImplLibCpu.cpp / ImplLibGpu / ImplLibDsp user should add code in   createOp and snpeUdoExecute according to their requirement
+
+## Creating UDO for SELU Layer
+ - The below steps are performed on the MNIST TensorFlow model which has a Selu operator as an activation function instead of Relu.
+ - The Selu operator is not supported by the Converter of SNPE. In order to make it supported, we have created UDO which allows users to integrate their custom operations with SNPE.
+ - We have trained the model for the MNIST dataset using  TensorFlow and saved the model in saved_model format using the below lines of code.
+   - model.save('selu_model')
+ - It will give a saved model in a folder with the name selu_model.
+ - In order to convert the TensorFlow model, we must know the input node name, output node name, and Input shape. 
+ - To know these details add the below lines of code in your .py file.
+   - print(model.input)
+   - print(model.output)
+ - After getting the required information about the model for conversion. But for a successful conversion, Need to define UDO for SELU as it is not supported by  SNPE Converter.
+
+
+Follow the below steps to create UDO for Selu : 
+ - Create a config.json file as shown in the below snippet.
+```json
+
+{
+    "UdoPackage_0":
+    {
+        "Operators": [
+            {
+            "type": "Selu",
+                "inputs":[
+                    {"name":"Placeholder", "data_type": "FLOAT_32"}
+                ],
+                "outputs":[
+                    {"name":"Output","data_type": "FLOAT_32"}
+                ],
+                "core_types": ["CPU"]
+            }
+        ],
+        "UDO_PACKAGE_NAME": "SeluUdoPackage"
+    }
+}
+
+```
+ - You have to provide the required fields in the .json file as per your model needs. Above snippet is created just for the CPU core type.
+ - Run below command to generate packages for your UDO
+   - snpe-udo-package-generator -p <my_config.json> -o <my-dir>
+     - My_config.json : name of your .json file
+     - My_dir : path to create packages
+   - After running the above command you will get packages in which you can add your UDO function.
+ - Write your UDO function in LibCpu.cpp on the which is present on the path	“YourUdoPackage/jni/src/CPU/”  and run MakeFile to run the code.
+ - After successful running of this file run MakeFile to compile the whole package and get .so for each file.
+ - Run below command to convert your model to the DLC 
+   - snpe-tensorflow-to-dlc -i <Path_To_FrozenGraph> --input_dim input_input 1,28,28,1 --out_node output -o <Path_To_Save_DLC>model.dlc --udo_config_paths<Path_to_Json>Selu.json
+     - For this example input_dim is (input_input)	, out_node is (output) and dimensions are 1,28,28,1
+     - Udo_config_paths : provide the path of the configuration file.  
+ - After successfully executing the above command, you have the DLC file.
+ - To get the output of your model run the below command in path <YourUdoPackage/libs/>:
+   - snpe-throughput-net-run --container <Path_To_dlc>model.dlc --duration 20  --use_cpu --udo_package_path UdoPackageReg.so
+     - Path_To_dlc: provide the path to the DLC file.
+     - --use_cpu because this implementation is CPU-based. If you  are doing implementation for DSP or GPU use arguments --use_gpu / --use_dsp.
+`Note : you have to run the snpe-throughput-net-run command on the path where UdoPackageReg.so is present. Otherwise it will give you  Error: libUdoSeluUdoPackageReg.so: cannot open shared object file: No such file or directory; error_component=User-defined Layer; line_no=186; thread_id=139795981084608`
+
+## Usage Instruction
+### Training the Model
+#### Clone the project repository:
+```sh
+git clone <PROJECT_REPO_URL>
+```
+#### Run Train script
+ - Go inside the model_script folder in the Project repository, and run the below command to start the training.
+```sh
+python mnist.py
+```
+ - The above script will train the model and save the model in saved_model format in the model_script/selu_model folder.
+
+
+#### Building the UDO for SeLU
+ - Before proceeding make sure that you have initialized the setup of SNPE.
+ - Go inside the Selu_udo/SeluUdoPackage folder in the project repository and run the command given below,
+```sh
+# make
+```
+#### Model Conversion using snpe-tensorflow-to-dlc
+```sh
+# snpe-tensorflow-to-dlc -i <Path_To_saved_model> --input_dim input_input 1,28,28,1 --out_node output -o <Path_To_Save_DLC>/model.dlc --udo_config_paths<Path_to_Json>/Selu.json
+```
+
+#### Testing the model with snpe-throughput-net-run
+```sh
+# snpe-throughput-net-run --container <Path_To_dlc>/model.dlc --duration 20  --use_cpu --udo_package_path UdoPackageReg.so
+```
