@@ -1,0 +1,27 @@
+# Copyright (c) 2019 Qualcomm Technologies, Inc.
+# All Rights Reserved.
+# Confidential and Proprietary - Qualcomm Technologies, Inc.
+
+# define library prerequisites list
+lib_cpu := jni/src/CPU
+lib_dsp := jni/src/DSP
+lib_gpu := jni/src/GPU
+lib_reg := jni/src/reg
+LIB_SOURCES = $(lib_cpu) $(lib_dsp) $(lib_gpu) $(lib_reg)
+
+# define target_architecture
+export TARGET_AARCH_VARS:= -march=armv8-a
+
+# define target name
+export TARGET = aarch64-linux-gcc4.9
+
+# specify compiler
+ifndef CXX
+export CXX ?= aarch64-linux-gnu-g++
+endif
+
+.PHONY: all $(LIB_SOURCES)
+all: $(LIB_SOURCES)
+
+$(LIB_SOURCES):
+	@if [ -d $@ ]; then $(MAKE) -C $@; else echo "Skipping directory. Directory $@ not found"; fi
