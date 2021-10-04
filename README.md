@@ -56,44 +56,44 @@ This project is intended to build and deploy an SNPE model on Qualcomm Devices, 
 
  - UdoPackage: Every UDO package can be described as "UdoPackage_i" where it indicates the order in which the packages will be generated. 
  - Operators: This is a child node of UdoPackage indicating the number of operators present.
-  - type: defines the type of the operation.
-  - inputs: a list of input tensors to the operation.
-   - name: It is an optional field that describes the name of the input tensor. Since the name of the input tensor is variable, the user is not required to provide this.
-   - data_type: A string field that describes the data type of this input tensor. Only one data type can be defined per tensor. The supported data types are
-    - FLOAT_16
-    - FLOAT_32
-    - FIXED_4
-    - FIXED_8
-    - FIXED_16
-    - UINT_8
-    - UINT_16
-    - UINT_32
-    - STRING
-   - static: It is a boolean field that is required if the input data is static i.e data is provided in the model. This field needs to be set if the input tensor will contain data, otherwise, the input will be treated dynamically, and the data will not be serialized.
-   - tensor_layout: A string field that describes the canonical dimension format of the input tensor. The supported values are:
-    - NCHW : organized in (batch x channel x height x width)
-    - NHWC : organized in (batch x height x width x channel)
-  - outputs: A list of output tensors to the operation.
-  - scalar_params: A list of scalar-valued attributes.
-   - name: A required field that describes the name of the scalar parameter.
-   - data_type: A required field that describes the data type supported by this scalar parameter.
-  - tensor_params: A list of tensor-valued attributes.
-  - core_types: The intended IP cores for this particular operation. The supported core_types:
-   - CPU
-   - GPU
-   - DSP
-  - dsp_arch_types: The intended DSP architecture types for DSP core type. The supported dsp_arch_types:
-   - v65
-   - v66
-   - v68
+   - type: defines the type of the operation.
+   - inputs: a list of input tensors to the operation.
+     - name: It is an optional field that describes the name of the input tensor. Since the name of the input tensor is variable, the user is not required to provide this.
+     - data_type: A string field that describes the data type of this input tensor. Only one data type can be defined per tensor. The supported data types are
+       - FLOAT_16
+       - FLOAT_32
+       - FIXED_4
+       - FIXED_8
+       - FIXED_16
+       - UINT_8
+       - UINT_16
+       - UINT_32
+       - STRING
+     - static: It is a boolean field that is required if the input data is static i.e data is provided in the model. This field needs to be set if the input tensor will contain data, otherwise, the input will be treated dynamically, and the data will not be serialized.
+     - tensor_layout: A string field that describes the canonical dimension format of the input tensor. The supported values are:
+       - NCHW : organized in (batch x channel x height x width)
+       - NHWC : organized in (batch x height x width x channel)
+   - outputs: A list of output tensors to the operation.
+   - scalar_params: A list of scalar-valued attributes.
+     - name: A required field that describes the name of the scalar parameter.
+     - data_type: A required field that describes the data type supported by this scalar parameter.
+   - tensor_params: A list of tensor-valued attributes.
+   - core_types: The intended IP cores for this particular operation. The supported core_types:
+     - CPU
+     - GPU
+     - DSP
+   - dsp_arch_types: The intended DSP architecture types for DSP core type. The supported dsp_arch_types:
+     - v65
+     - v66
+     - v68
  - UDO_PACKAGE_NAME: The name of the UDO Package, which can be any valid string.
 
 ### Generate UDO package
  - The intention of this tool is to generate partial skeleton code to define prototyping. It generates a UDO package using a user-provided config file.
  - The tool also has a dependency on the Mako Template Library, which can be installed using this command :
-  - pip install Mako
+   - pip install Mako
  - Once setup is complete, the following command can be used to generate a package:
-  - snpe-udo-package-generator -p <my_config.json> -o <my-dir>
+   - snpe-udo-package-generator -p <my_config.json> -o <my-dir>
  - The above command will create a UDO package which will be a directory composed of skeleton code and build files that can be used to compile the package contents into shared libraries.
   
 ### Generated Source Code
